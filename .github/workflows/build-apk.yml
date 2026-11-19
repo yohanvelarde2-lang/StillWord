@@ -1,0 +1,46 @@
+name: Build StillWord APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Android platform 35 and build tools
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Run unit tests
+        run: |
+          mkdir -p build/tests
+          javac -encoding UTF-8 -d build/tests \
+            app/src/main/java/org/lockheart/abide/{Policy,MobiText,ForegroundWindow,BookBookmark}.java \
+            tests/stubs/android/view/accessibility/AccessibilityWindowInfo.java \
+            tests/stubs/android/content/SharedPreferences.java \
+            tests/{PolicyTest,MobiTextTest,ForegroundWindowTest,BookBookmarkTest}.java
+          for s in PolicyTest MobiTextTest ForegroundWindowTest BookBookmarkTest; do
+            java -cp build/tests "org.lockheart.abide.$s"
+          done
+
+      - name: Build signed APK
+        run: |
+          export ANDROID_JAR="$ANDROID_HOME/platforms/android-35/android.jar"
+          export ANDROID_BUILD_TOOLS="$ANDROID_HOME/build-tools/35.0.0"
+          bash build.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: StillWord-APK
+          path: build/StillWord_*.apk
+          if-no-files-found: error

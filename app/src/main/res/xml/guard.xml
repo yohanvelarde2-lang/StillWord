@@ -1,0 +1,5 @@
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+ android:accessibilityEventTypes="typeWindowStateChanged|typeWindowsChanged" android:accessibilityFeedbackType="feedbackGeneric"
+ android:notificationTimeout="0" android:accessibilityFlags="flagRetrieveInteractiveWindows"
+ android:canRetrieveWindowContent="true" android:isAccessibilityTool="false"
+ android:description="@string/guard_description" android:settingsActivity="org.lockheart.abide.MainActivity"/>
