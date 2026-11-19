@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -44,3 +47,16 @@ jobs:
           name: StillWord-APK
           path: build/StillWord_*.apk
           if-no-files-found: error
+
+      - name: Publish APK as a GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(sed -n 's/.*android:versionName="\([^"]*\)".*/\1/p' app/src/main/AndroidManifest.xml)
+          TAG="v$VERSION"
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" build/StillWord_*.apk --clobber
+          else
+            gh release create "$TAG" build/StillWord_*.apk --title "StillWord $VERSION" \
+              --notes "Battery update. See StillWord_Setup_Guide.md for what changed and the phone checks."
+          fi
